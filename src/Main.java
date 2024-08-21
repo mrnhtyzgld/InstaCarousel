@@ -5,7 +5,9 @@ import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.regex.Pattern;
 
@@ -46,7 +48,7 @@ public class Main extends JPanel {
     int currMouseX, currMouseY;
 
     int[] Xs;
-
+    int q1Y, q1X, q2Y;
 
     public Main()
     {
@@ -95,12 +97,20 @@ public class Main extends JPanel {
 
     public File[] findImages()
     {
-        String directoryPath = "./resources";
+        String dirString = "./resources";
 
         // Regex deseni: .jpg, .jpeg, veya .png uzantılı dosyalar
         Pattern pattern = Pattern.compile(".*\\.(jpg|jpeg|png)$", Pattern.CASE_INSENSITIVE);
 
-        File dir = new File(directoryPath);
+        File dir = new File(dirString);
+        Path dirPath = Paths.get(dirString);
+        if (!Files.exists(dirPath) || !Files.isDirectory(dirPath)) {
+            try {
+                Files.createDirectory(dirPath);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
 
         // Dizindeki tüm uygun dosyaları listele
         File[] files = dir.listFiles((dir1, name) -> pattern.matcher(name).matches());
@@ -156,10 +166,10 @@ public class Main extends JPanel {
     private void printSelectedArea (Graphics g,int boldness, Color color, Color color2)
     {
         g.setColor(color);
-        int q1X = Math.min(firstX, secX);
-        int q1Y = Math.min(firstY, secY);
+        q1X = Math.min(firstX, secX);
+        q1Y = Math.min(firstY, secY);
         int q2X = Math.max(firstX, secX);
-        int q2Y = Math.max(firstY, secY);
+        q2Y = Math.max(firstY, secY);
 
         g.setColor(color2);
         g.fillRect(q1X, q1Y, q2X - q1X, boldness);
@@ -309,7 +319,7 @@ public class Main extends JPanel {
                             throw new RuntimeException(ex);
                         }
                         try {
-                            ic.save(ic.cut(imageToCrop, Xs ), currentName); // TODO ilk noktayı da alacak
+                            ic.save(ic.cut(imageToCrop, iconToCrop, Xs, q1X, q1Y, q2Y), currentName);
                         } catch (IOException ex) {
                             throw new RuntimeException(ex);
                         }
